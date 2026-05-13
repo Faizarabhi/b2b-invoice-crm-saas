@@ -2,7 +2,7 @@ services:
   postgres:
     image: postgres:16
     container_name: b2b_invoice_postgres
-    restart: always
+    restart: unless-stopped
     environment:
       POSTGRES_DB: b2b_invoice_crm
       POSTGRES_USER: postgres
@@ -10,12 +10,14 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - b2b_invoice_postgres_data:/var/lib/postgresql/data
+    networks:
+      - b2b_invoice_network
 
   pgadmin:
-    image: dpage/pgadmin4
+    image: dpage/pgadmin4:latest
     container_name: b2b_invoice_pgadmin
-    restart: always
+    restart: unless-stopped
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: admin
@@ -23,6 +25,24 @@ services:
       - "5050:80"
     depends_on:
       - postgres
+    volumes:
+      - b2b_invoice_pgadmin_data:/var/lib/pgadmin
+    networks:
+      - b2b_invoice_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: b2b_invoice_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - b2b_invoice_network
 
 volumes:
-  postgres_data:
+  b2b_invoice_postgres_data:
+  b2b_invoice_pgadmin_data:
+
+networks:
+  b2b_invoice_network:
+    driver: bridge
